@@ -1,7 +1,7 @@
 import requests
 import dotenv
 import logging
-from utils import LastfmTrack
+from utils.models import LastfmTrack
 
 logger = logging.getLogger(__name__)
 

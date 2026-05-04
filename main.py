@@ -1,18 +1,16 @@
 import random
+import os
 import logging
 from colorlog import ColoredFormatter
 
-from lastfm import get_top_tracks
-from spotify import play_song
-from utils import (
-    PlayResult,
-    Settings,
-    LastfmTrack,
-    SpotifyTrackData,
-    TrackAnswerAliases,
-    analyze_guess
-)
+from services.lastfm import get_top_tracks
+from services.spotify import play_song
+from utils.models import PlayResult, LastfmTrack, SpotifyTrackData
+from matching.matching import analyze_guess
+from matching.aliases import TrackAnswerAliases
+from data_persistency import Settings
 
+os.makedirs("cache", exist_ok=True) # Create cache folder for saving data
 
 handler = logging.StreamHandler()
 
