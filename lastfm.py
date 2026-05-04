@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 LASTFM_API_KEY = dotenv.get_key(".env", "LASTFM_API_KEY")
 
-def get_top_tracks(username, period="overall", limit=1) -> list[LastfmTrack]:
+def get_top_tracks(username, period="overall", limit=100) -> list[LastfmTrack]:
     logger.debug(f"Searching user {username}'s top tracks with settings: period={period}, limit={limit}")
     r = requests.get(
         "http://ws.audioscrobbler.com/2.0/",
@@ -39,5 +39,7 @@ def get_top_tracks(username, period="overall", limit=1) -> list[LastfmTrack]:
         )
 
     logger.debug(f"Got {len(tracks)} tracks")
+    if len(tracks) != limit:
+        logger.warning(f"Did not fetch {limit} tracks, possibly not enough data in the selected period?")
 
     return tracks

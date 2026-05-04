@@ -3,7 +3,9 @@ from spotipy.oauth2 import SpotifyOAuth
 
 import logging
 
-from utils import PlayResult, SpotifyTrackData
+from utils import PlayResult, SpotifyTrackData, Settings
+
+settings = Settings()
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +20,16 @@ def get_active_device_id():
     for d in devices:
         if d.get("is_active"):
             return d["id"]
+    
+    logging.debug("No active device found")
+
+    # if no device available fallback to last device
+    last_device = settings.get("last_device")
+    if last_device:
+        logging.debug("Falling back to the last device")
+        return last_device
+
+    logger.warning("Could not open any device")
 
     return None
 
@@ -43,11 +55,12 @@ def play_song(query) -> tuple[PlayResult, SpotifyTrackData | None]:
     device_id = get_active_device_id()
 
     if not device_id:
-        logger.warning("Spotify not open")
         return PlayResult.NO_SPOTIFY, None
 
     sp.start_playback(device_id=device_id, uris=[uri])
     set_repeat()
+
+    settings.set("last_device", device_id)
 
     artists = []
     for a in track['artists']:
