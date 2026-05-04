@@ -33,7 +33,7 @@ def get_active_device_id():
 
     return None
 
-def set_repeat(state="track"):
+def set_repeat(state="track", device_id=None):
     sp.repeat(state)
 
 
@@ -58,7 +58,7 @@ def play_song(query) -> tuple[PlayResult, SpotifyTrackData | None]:
         return PlayResult.NO_SPOTIFY, None
 
     sp.start_playback(device_id=device_id, uris=[uri])
-    set_repeat()
+    set_repeat(device_id=device_id)
 
     settings.set("last_device", device_id)
 
