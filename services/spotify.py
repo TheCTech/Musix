@@ -20,6 +20,25 @@ def get_settings():
         settings = Settings()
     return settings
 
+def validate_spotify_token():
+    cache_handler = spotipy.CacheFileHandler("cache/spotify_token.json")
+
+    auth_manager = SpotifyOAuth(
+            scope=scope,
+            cache_path="cache/spotify_token.json"
+        )
+
+    token_info = auth_manager.validate_token(cache_handler.get_cached_token())
+
+    return token_info
+
+def authenticate_spotify():
+    auth_manager = SpotifyOAuth(
+            scope=scope,
+            cache_path="cache/spotify_token.json"
+        )
+    print(SpotifyOAuth.get_access_token(auth_manager))
+
 def get_spotify():
     global sp
 
