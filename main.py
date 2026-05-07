@@ -9,6 +9,7 @@ from threading import Thread
 
 from game_logic import GuessScreen, play
 from utils.ui_utils import LoadingScreen, HomeScreen
+from data_persistency import Settings
 
 
 #region setup
@@ -41,6 +42,8 @@ for lib in ["urllib3", "spotipy", "requests"]:
  
 class MusixApp(App):
     def build(self):
+        self.settings_obj = Settings()
+        
         self.sm = ScreenManager()
 
         self.home_screen = HomeScreen(name="home_screen")

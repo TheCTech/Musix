@@ -11,8 +11,7 @@ from services.lastfm import get_top_tracks
 from services.spotify import play_song, PlayResult
 from matching.aliases import TrackAnswerAliases
 from matching.matching import analyze_guess
-from utils.utils import get_app
-from data_persistency import Settings
+from utils.utils import get_app, get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -126,7 +125,7 @@ def play():
 
     guess_screen: GuessScreen = sm.get_screen("guess_screen")
 
-    settings = Settings()
+    settings = get_settings()
     top_tracks = get_top_tracks(settings.get("lastfm_username"), limit=settings.get("lastfm_limit")) # type: ignore
 
     if not top_tracks:

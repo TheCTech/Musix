@@ -7,11 +7,17 @@ from kivy.app import App
 
 logger = logging.getLogger(__name__)
 
+app: App | None = None
 
 def get_app() -> App:
-    app = App.get_running_app()
-    assert app is not None
-    return cast(App, app)
+    global app
+    if app is None:
+        app = App.get_running_app()
+        
+    return app
+
+def get_settings():
+    return get_app().settings_obj
 
 def get_lastfm_username():
     while True:

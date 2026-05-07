@@ -4,21 +4,13 @@ from spotipy.oauth2 import SpotifyOAuth
 import logging
 
 from utils.models import PlayResult, SpotifyTrackData
-from data_persistency import Settings
+from utils.utils import get_settings
 
 logger = logging.getLogger(__name__)
 
 scope = "user-modify-playback-state user-read-playback-state"
 
 sp = None
-
-settings = None
-
-def get_settings():
-    global settings
-    if settings is None:
-        settings = Settings()
-    return settings
 
 def validate_spotify_token():
     cache_handler = spotipy.CacheFileHandler("cache/spotify_token.json")
