@@ -1,8 +1,5 @@
-import os
-import json
 import re
 import logging
-from typing import cast
 from kivy.app import App
 
 logger = logging.getLogger(__name__)
