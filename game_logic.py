@@ -1,4 +1,5 @@
 from kivy.clock import Clock
+from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.textinput import TextInput
 from kivy.uix.screenmanager import ScreenManager, Screen
@@ -10,6 +11,7 @@ from services.lastfm import get_top_tracks
 from services.spotify import play_song, PlayResult
 from matching.aliases import TrackAnswerAliases
 from matching.matching import analyze_guess
+from utils.utils import get_app
 from data_persistency import Settings
 
 logger = logging.getLogger(__name__)
@@ -114,7 +116,11 @@ class GuessScreen(Screen):
         self.prepare_round()
 
 
-def play(sm: ScreenManager):
+def play(): 
+    sm: ScreenManager = get_app().sm
+
+    Clock.schedule_once(lambda dt: setattr(sm, "current", "loading_screen"), 0)
+
     guess_screen: GuessScreen = sm.get_screen("guess_screen")
 
     settings = Settings()

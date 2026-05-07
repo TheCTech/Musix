@@ -2,9 +2,16 @@ import os
 import json
 import re
 import logging
+from typing import cast
+from kivy.app import App
 
 logger = logging.getLogger(__name__)
 
+
+def get_app() -> App:
+    app = App.get_running_app()
+    assert app is not None
+    return cast(App, app)
 
 def get_lastfm_username():
     while True:

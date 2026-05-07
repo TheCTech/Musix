@@ -8,7 +8,7 @@ from colorlog import ColoredFormatter
 from threading import Thread
 
 from game_logic import GuessScreen, play
-from utils.ui_utils import LoadingScreen
+from utils.ui_utils import LoadingScreen, HomeScreen
 
 
 #region setup
@@ -43,18 +43,18 @@ class MusixApp(App):
     def build(self):
         self.sm = ScreenManager()
 
+        self.home_screen = HomeScreen(name="home_screen")
+        self.sm.add_widget(self.home_screen)
+
         self.loading_screen = LoadingScreen(name="loading_screen")
         self.sm.add_widget(self.loading_screen)
 
         self.guess_screen = GuessScreen(name="guess_screen")
         self.sm.add_widget(self.guess_screen)
 
-        self.sm.current = "loading_screen"
+        self.sm.current = "home_screen"
 
         return self.sm
-
-    def on_start(self):
-        Thread(target=play, args=(self.sm,), daemon=True).start()
 
 
 if __name__ == "__main__":
