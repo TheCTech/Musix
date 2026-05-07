@@ -1,65 +1,95 @@
+from kivy.clock import Clock
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.textinput import TextInput
+from kivy.uix.screenmanager import ScreenManager, Screen
+
 import logging
 import random
 
 from services.lastfm import get_top_tracks
 from services.spotify import play_song, PlayResult
-from utils.models import LastfmTrack, SpotifyTrackData
 from matching.aliases import TrackAnswerAliases
 from matching.matching import analyze_guess
 from data_persistency import Settings
 
 logger = logging.getLogger(__name__)
 
-def guess(lastfm_track: LastfmTrack, spotify_track: SpotifyTrackData):
-    answer_aliases = TrackAnswerAliases(lastfm_track, spotify_track)
+class GuessScreen(Screen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-    title_guessed = False
-    artist_guessed = False
+        self.ready = False
 
-    while True:
-        logger.debug(f"NAME ALIASES: {answer_aliases.names}")
-        logger.debug(f"ARTIST ALIASES: {answer_aliases.artists}")
+        layout = BoxLayout(orientation="vertical")
 
+        self.label = TextInput(readonly=True)
+        layout.add_widget(self.label)
 
-        print(f"{lastfm_track.name if title_guessed else "XXXX"} by {lastfm_track.artist if artist_guessed else "XXXX"} {"GUESSED!" if artist_guessed and title_guessed else ""}")
+        self.input_bar = TextInput(
+            multiline=False,
+            on_text_validate=self.on_text_enter
+        )
+        layout.add_widget(self.input_bar)
 
-        if (artist_guessed and title_guessed):
-                ### TODO: scoring system ###
-                logger.info("Track guessed")
-                return
+        self.add_widget(layout)
 
-        user_input = input("ANS: ")
+    def start_guessing(self, lastfm_track, spotify_track):
+        self.lastfm_track = lastfm_track
+        self.spotify_track = spotify_track
+
+        self.answer_aliases = TrackAnswerAliases(lastfm_track, spotify_track)
+
+        self.title_guessed = False
+        self.artist_guessed = False
+
+        self.update_display()
+
+        self.ready = True
+
+    def on_text_enter(self, instance):
+        user_input = instance.text.strip()
+        instance.text = ""
+
+        if not self.ready:
+            return
 
         if user_input == "skip":
-            artist_guessed = True
-            title_guessed = True
+            self.title_guessed = True
+            self.artist_guessed = True
+            self.finish()
+            return
 
-        result = analyze_guess(user_input, answer_aliases)
-
-        logger.debug(f"RESULT: {result}")
+        result = analyze_guess(user_input, self.answer_aliases)
 
         if result["quality"] in ("perfect", "close"):
             if result["match_type"] in ["title", "both"]:
-                title_guessed = True
-                print("title correct")
+                self.title_guessed = True
             if result["match_type"] in ["artist", "both"]:
-                artist_guessed = True
-                print("artist correct")
+                self.artist_guessed = True
 
-def play():
-    settings = Settings()
-    top_tracks = get_top_tracks(settings.get("lastfm_username"), limit=settings.get("lastfm_limit")) # type: ignore
+        if self.title_guessed and self.artist_guessed:
+            self.finish()
+        else:
+            self.update_display()
 
-    if not top_tracks:
-        logger.error("No tracks found.")
-        return
+    def update_display(self):
+        title = self.lastfm_track.name if self.title_guessed else "XXXX"
+        artist = self.lastfm_track.artist if self.artist_guessed else "XXXX"
 
-    random.shuffle(top_tracks)
-    top_tracks = top_tracks[:10]
+        self.label.text = f"{title} by {artist}"
+    
+    def finish(self):
+        self.label.text = f"{self.lastfm_track.name} by {self.lastfm_track.artist} YEEEH"
 
-    for i, track in enumerate(top_tracks):
+        self.current_track_id += 1
+        ### TODO: scoring###
 
-        logger.debug(f"{track.name} ({i+1}/10)")
+        Clock.schedule_once(lambda dt: self.prepare_round(), 5) 
+    
+    def prepare_round(self):
+        track = self.tracks[self.current_track_id]
+
+        logger.debug(f"{track.name} ({self.current_track_id+1}/10)")
 
         state, spotify_data = play_song(f"track:{track.name} artist:{track.artist}")
 
@@ -75,4 +105,27 @@ def play():
         if state == PlayResult.OK:
             logger.debug("OK (song should be playing)")
             assert spotify_data is not None
-            guess(track, spotify_data)
+            self.start_guessing(track, spotify_data)
+
+    def prepare_game(self, tracks):
+        self.tracks = tracks
+        self.current_track_id = 0
+
+        self.prepare_round()
+
+
+def play(sm: ScreenManager):
+    guess_screen: GuessScreen = sm.get_screen("guess_screen")
+
+    settings = Settings()
+    top_tracks = get_top_tracks(settings.get("lastfm_username"), limit=settings.get("lastfm_limit")) # type: ignore
+
+    if not top_tracks:
+        logger.error("No tracks found.")
+        return
+
+    random.shuffle(top_tracks)
+    top_tracks = top_tracks[:10]
+
+    guess_screen.prepare_game(top_tracks)
+            
