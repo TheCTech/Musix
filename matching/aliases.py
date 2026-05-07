@@ -1,6 +1,10 @@
 import re
+import logging
+
 from utils.utils import normalize
 from utils.models import LastfmTrack, SpotifyTrackData
+
+logger = logging.getLogger(__name__)
 
 def split_title_variants(text: str) -> list[str]:
         text = text.lower()
@@ -55,3 +59,6 @@ class TrackAnswerAliases:
         self.names = list(title_variants)
         self.artists = list(artist_variants)
         self.both = list(both_variants)
+
+        logger.debug(f"NAME ALIASES: {self.names}")
+        logger.debug(f"ARTIST ALIASES: {self.artists}")
