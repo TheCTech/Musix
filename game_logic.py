@@ -127,5 +127,7 @@ def play(sm: ScreenManager):
     random.shuffle(top_tracks)
     top_tracks = top_tracks[:10]
 
-    guess_screen.prepare_game(top_tracks)
-            
+    Clock.schedule_once(lambda dt: (
+        setattr(sm, "current", "guess_screen"),
+        guess_screen.prepare_game(top_tracks)
+    ))
