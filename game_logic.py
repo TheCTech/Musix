@@ -84,6 +84,9 @@ class GuessScreen(Screen):
         self.label.text = f"{self.lastfm_track.name} by {self.lastfm_track.artist} YEEEH"
 
         self.current_track_id += 1
+        if self.current_track_id > len(self.tracks)-1:
+            Clock.schedule_once(lambda dt: setattr(get_app().sm, "current", "home_screen"), 0) 
+            return
         ### TODO: scoring###
 
         Clock.schedule_once(lambda dt: self.prepare_round(), 5) 
