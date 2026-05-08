@@ -1,12 +1,15 @@
 import os
 import json
-from utils.utils import get_lastfm_username
+import logging
+
+logger = logging.getLogger(__name__)
 
 class Settings:
     FILE = "cache/user_settings.json"
     DEFAULTS = {
         "lastfm_limit": 100,
-        "lastfm_period": "overall"
+        "lastfm_period": "overall",
+        "lastfm_username": ""
     }
 
     def __init__(self):
@@ -36,11 +39,7 @@ class Settings:
         if key in self.data:
             return self.data[key]
 
-        if key == "lastfm_username":
-            username = get_lastfm_username()
-            self.set("lastfm_username", username)
-            return username
-
+        logger.warning(f"Trying to get \"{key}\", but the key does not exist")
         return None
 
     def set(self, key, value):
