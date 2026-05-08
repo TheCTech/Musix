@@ -7,7 +7,7 @@ import logging
 from colorlog import ColoredFormatter
 
 from game_logic import GuessScreen
-from utils.ui_utils import LoadingScreen, HomeScreen
+from utils.ui_utils import LoadingScreen, HomeScreen, ErrorScreen
 from data_persistency import Settings
 
 
@@ -50,6 +50,9 @@ class MusixApp(App):
 
         self.loading_screen = LoadingScreen(name="loading_screen")
         self.sm.add_widget(self.loading_screen)
+
+        self.error_screen = ErrorScreen(name="error_screen", error_text="")
+        self.sm.add_widget(self.error_screen)
 
         self.guess_screen = GuessScreen(name="guess_screen")
         self.sm.add_widget(self.guess_screen)

@@ -6,8 +6,8 @@ from kivy.clock import Clock
 
 from threading import Thread
 
-from game_logic import play
 from services.spotify import validate_spotify_token, authenticate_spotify
+from utils.utils import get_app
 
 class LoadingScreen(Screen):
     def __init__(self, **kwargs):
@@ -17,6 +17,24 @@ class LoadingScreen(Screen):
 
         self.add_widget(label)
 
+class ErrorScreen(Screen):
+    def __init__(self, error_text, **kwargs):
+        super().__init__(**kwargs)
+
+        self.label = Label(text=error_text)
+
+        self.add_widget(self.label)
+    
+    def set_error(self, text):
+        self.label.text = text
+
+def show_error(error_text):
+    app = get_app()
+
+    app.error_screen.set_error(error_text)
+
+    Clock.schedule_once(lambda dt: setattr(app.sm, "current", "error_screen"))
+
 class HomeScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -25,6 +43,8 @@ class HomeScreen(Screen):
 
         label = Label(text="main")
         self.layout.add_widget(label)
+
+        from game_logic import play
 
         self.play_button = Button(
             text="PLAY",

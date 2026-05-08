@@ -11,6 +11,7 @@ from services.spotify import play_song, PlayResult
 from matching.aliases import TrackAnswerAliases
 from matching.matching import analyze_guess
 from utils.utils import get_app, get_settings
+from utils.ui_utils import show_error
 
 logger = logging.getLogger(__name__)
 
@@ -98,11 +99,13 @@ class GuessScreen(Screen):
 
         if state == PlayResult.NO_SPOTIFY:
             print("No active Spotify device found. Open Spotify app first.")
+            show_error("No active Spotify device found. Open Spotify app first.")
             return
 
         if state == PlayResult.SONG_NOT_FOUND:
             ### TODO: When doing score logic this needs to be taken into account ###
             print("The song could not be found, skipping")
+            show_error("The song could not be found")
             return
 
         if state == PlayResult.OK:
@@ -129,6 +132,7 @@ def play():
 
     if not top_tracks:
         logger.error("No tracks found.")
+        show_error("Could not fetch any tracks")
         return
 
     random.shuffle(top_tracks)
