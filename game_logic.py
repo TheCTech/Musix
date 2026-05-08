@@ -128,7 +128,7 @@ def play():
     guess_screen: GuessScreen = sm.get_screen("guess_screen")
 
     settings = get_settings()
-    top_tracks = get_top_tracks(settings.get("lastfm_username"), limit=settings.get("lastfm_limit")) # type: ignore
+    top_tracks = get_top_tracks(settings.get("lastfm_username"), limit=settings.get("lastfm_limit"))
 
     if not top_tracks:
         logger.error("No tracks found.")

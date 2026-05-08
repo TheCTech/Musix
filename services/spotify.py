@@ -69,7 +69,7 @@ def get_active_device_id():
 
 def set_repeat(state="track", device_id=None):
     client = get_spotify()
-    client.repeat(state, device_id=device_id)  # type: ignore
+    client.repeat(state, device_id=device_id)
 
 
 def play_song(query) -> tuple[PlayResult, SpotifyTrackData | None]:
@@ -77,7 +77,7 @@ def play_song(query) -> tuple[PlayResult, SpotifyTrackData | None]:
 
     logger.debug(f"Searching for {query}")
 
-    results = client.search(q=query, type="track", limit=1)  # type: ignore
+    results = client.search(q=query, type="track", limit=1)
 
     if not results["tracks"]["items"]: # type: ignore
         logger.warning(f"Song not found. ({query})")
@@ -93,7 +93,7 @@ def play_song(query) -> tuple[PlayResult, SpotifyTrackData | None]:
     if not device_id:
         return PlayResult.NO_SPOTIFY, None
 
-    client.start_playback(device_id=device_id, uris=[uri])  # type: ignore
+    client.start_playback(device_id=device_id, uris=[uri])
     set_repeat(device_id=device_id)
 
     get_settings().set("last_device", device_id)
