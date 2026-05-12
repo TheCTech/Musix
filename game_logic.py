@@ -102,6 +102,11 @@ class GuessScreen(Screen):
             show_error("No active Spotify device found. Open Spotify app first.")
             return
 
+        if state == PlayResult.ERROR:
+            logger.error("Round preparation cancelled, spotify error detected")
+            # The error should be handled externally
+            return
+
         if state == PlayResult.SONG_NOT_FOUND:
             ### TODO: When doing score logic this needs to be taken into account ###
             print("The song could not be found, skipping")

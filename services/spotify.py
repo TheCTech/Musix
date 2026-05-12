@@ -77,7 +77,13 @@ def play_song(query) -> tuple[PlayResult, SpotifyTrackData | None]:
 
     logger.debug(f"Searching for {query}")
 
-    results = client.search(q=query, type="track", limit=1)
+    try:
+        results = client.search(q=query, type="track", limit=1)
+    except spotipy.SpotifyException as e:
+        from utils.ui_utils import show_error
+        logger.exception("Spotify error")
+        show_error(f"Spotipy error: {e.reason}", notify_support_prompt=True)
+        return PlayResult.ERROR, None
 
     if not results["tracks"]["items"]: # type: ignore
         logger.warning(f"Song not found. ({query})")

@@ -4,6 +4,7 @@ class PlayResult(Enum):
     OK = auto()
     SONG_NOT_FOUND = auto()
     NO_SPOTIFY = auto()
+    ERROR = auto()
 
 
 class LastfmTrack:

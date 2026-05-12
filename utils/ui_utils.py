@@ -9,6 +9,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.switch import Switch
 from kivy.uix.spinner import Spinner
 from kivy.clock import Clock
+from kivy.core.window import Window
 
 import logging
 from threading import Thread
@@ -30,17 +31,49 @@ class ErrorScreen(Screen):
     def __init__(self, error_text, **kwargs):
         super().__init__(**kwargs)
 
-        self.label = Label(text=error_text)
+        layout = BoxLayout(orientation="vertical")
 
-        self.add_widget(self.label)
+        self.label = Label(
+            text=error_text,
+            size_hint_y=1,
+            text_size=(Window.width * 0.95, None),
+            halign="left",
+            valign="top",
+        )
+
+        layout.add_widget(self.label)
+
+        close_btn = Button(
+            text="Close",
+            size_hint_y=None,
+            height=60
+        )
+
+        close_btn.bind(on_release=lambda _: self.close_screen())
+
+        layout.add_widget(close_btn)
+
+        self.add_widget(layout)
+
+    def close_screen(self):
+        Clock.schedule_once(lambda dt: setattr(get_app().sm, "current", "home_screen"))
     
     def set_error(self, text):
         self.label.text = text
 
-def show_error(error_text):
+def show_error(error_text, notify_support_prompt=False):
     app = get_app()
 
-    app.error_screen.set_error(error_text)
+    message = str(error_text)
+
+    if notify_support_prompt:
+        message = (
+            "An unexpected error occurred.\n\n"
+            "If this keeps happening, check logs or contact support.\n\n"
+            f"Reason:\n{message}"
+        )
+
+    app.error_screen.set_error(message)
 
     Clock.schedule_once(lambda dt: setattr(app.sm, "current", "error_screen"))
 
