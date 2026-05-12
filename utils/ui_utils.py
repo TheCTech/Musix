@@ -1,4 +1,4 @@
-from kivy.uix.screenmanager import Screen
+from kivy.uix.screenmanager import Screen, NoTransition
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
@@ -64,6 +64,9 @@ class ErrorScreen(Screen):
 def show_error(error_text, notify_support_prompt=False):
     app = get_app()
 
+    old_sm_transition = app.sm.transition
+    app.sm.transition = NoTransition()
+
     message = str(error_text)
 
     if notify_support_prompt:
@@ -75,7 +78,11 @@ def show_error(error_text, notify_support_prompt=False):
 
     app.error_screen.set_error(message)
 
-    Clock.schedule_once(lambda dt: setattr(app.sm, "current", "error_screen"))
+    def switch_screen(_):
+        setattr(app.sm, "current", "error_screen")
+        app.sm.transition = old_sm_transition
+
+    Clock.schedule_once(switch_screen)
 
 class HomeScreen(Screen):
     def __init__(self, **kwargs):
