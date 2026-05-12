@@ -61,7 +61,9 @@ def get_active_device_id():
     last_device = get_settings().get("last_device")
     if last_device:
         logging.debug("Falling back to the last device")
-        return last_device
+        if any(device["id"] == last_device for device in devices):
+            logging.debug("Fallback successful")
+            return last_device
 
     logger.warning("Could not open any device")
     return None
