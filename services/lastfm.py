@@ -7,6 +7,26 @@ logger = logging.getLogger(__name__)
 
 LASTFM_API_KEY = dotenv.get_key(".env", "LASTFM_API_KEY")
 
+def verify_user(username):
+    logger.debug(f"Verifying user \"{username}\" exists on lastfm")
+    r = requests.get(
+        "http://ws.audioscrobbler.com/2.0/",
+        params={
+            "method": "user.getinfo",
+            "user": username,
+            "api_key": LASTFM_API_KEY,
+            "format": "json"
+        }
+    )
+    data = r.json()
+
+    if "user" in data.keys():
+        logger.debug("Client exists")
+        return True
+    
+    logger.warning(f"User not found, error code: {data["error"]}")
+    return False
+
 def get_top_tracks(username, period="overall", limit=100) -> list[LastfmTrack]:
     logger.debug(f"Searching user {username}'s top tracks with settings: period={period}, limit={limit}")
     r = requests.get(

@@ -6,7 +6,7 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 import logging
 import random
 
-from services.lastfm import get_top_tracks
+from services.lastfm import get_top_tracks, verify_user
 from services.spotify import play_song, PlayResult
 from matching.aliases import TrackAnswerAliases
 from matching.matching import analyze_guess
@@ -133,7 +133,13 @@ def play():
     guess_screen: GuessScreen = sm.get_screen("guess_screen")
 
     settings = get_settings()
-    top_tracks = get_top_tracks(settings.get("lastfm_username"), limit=settings.get("lastfm_limit"))
+
+    lastfm_username = settings.get("lastfm_username")
+
+    if not verify_user(lastfm_username):
+        show_error("Last.fm user not found, please specify the correct username in settings")
+
+    top_tracks = get_top_tracks(lastfm_username, limit=settings.get("lastfm_limit"))
 
     if not top_tracks:
         logger.error("No tracks found.")
