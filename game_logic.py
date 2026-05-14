@@ -147,7 +147,7 @@ def play():
         return
 
     random.shuffle(top_tracks)
-    top_tracks = top_tracks[:get_settings().get["round_length"]]
+    top_tracks = top_tracks[:get_settings().get("round_length")]
 
     Clock.schedule_once(lambda dt: (
         setattr(sm, "current", "guess_screen"),
