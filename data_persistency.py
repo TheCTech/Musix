@@ -7,6 +7,7 @@ logger = logging.getLogger(__name__)
 class Settings:
     FILE = "cache/user_settings.json"
     DEFAULTS = {
+        "round_length": 10,
         "lastfm_limit": 100,
         "lastfm_period": "overall",
         "lastfm_username": ""

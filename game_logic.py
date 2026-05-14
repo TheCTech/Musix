@@ -93,7 +93,7 @@ class GuessScreen(Screen):
     def prepare_round(self):
         track = self.tracks[self.current_track_id]
 
-        logger.debug(f"{track.name} ({self.current_track_id+1}/10)")
+        logger.debug(f"{track.name} ({self.current_track_id+1}/{len(self.tracks)})")
 
         state, spotify_data = play_song(f"track:{track.name} artist:{track.artist}")
 
@@ -147,7 +147,7 @@ def play():
         return
 
     random.shuffle(top_tracks)
-    top_tracks = top_tracks[:10]
+    top_tracks = top_tracks[:get_settings().get["round_length"]]
 
     Clock.schedule_once(lambda dt: (
         setattr(sm, "current", "guess_screen"),

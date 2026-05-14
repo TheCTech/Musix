@@ -179,6 +179,9 @@ class SettingsScreen(Screen):
 
         #endregion
         #region settings
+
+        self.add_group_label("General")
+        self.add_slider_setting("Round length", 3, 25, "round_length")
         
         self.add_group_label("Last.fm")
         self.add_text_setting("Username", "lastfm_username")
