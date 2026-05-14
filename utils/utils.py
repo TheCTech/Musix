@@ -43,6 +43,9 @@ def handle_spotify_authentication_button(is_spotify, button_instance): # False f
             logger.debug("Removing spotify token from cache")
             from os import remove
             remove("cache/spotify_token.json")
+
+            app.home_screen.play_button.disabled = True
+            app.home_screen.validate_spotify()
         
         
         button_instance.text = "Connect" if is_spotify else "Disconnect"

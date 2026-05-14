@@ -122,7 +122,7 @@ class HomeScreen(Screen):
             Clock.schedule_once(lambda dt: setattr(self.play_button, "disabled", False), 0)
             return
         
-        Clock.schedule_once(lambda dt: Thread(target=self.validate_spotify, daemon=True).start(), 5)
+        Clock.schedule_once(lambda dt: Thread(target=self.validate_spotify, daemon=True).start(), 1)
 
 
 class SettingsScreen(Screen):
