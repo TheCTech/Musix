@@ -181,7 +181,7 @@ class SettingsScreen(Screen):
         #region settings
 
         self.add_group_label("General")
-        self.add_slider_setting("Round length", 3, 25, "round_length")
+        self.add_slider_setting("Round length", 3, 25, 1, "round_length")
         
         self.add_group_label("Last.fm")
         self.add_text_setting("Username", "lastfm_username")
@@ -258,7 +258,7 @@ class SettingsScreen(Screen):
 
         self.layout.add_widget(row)
 
-    def add_slider_setting(self, text, min_val, max_val, key):
+    def add_slider_setting(self, text, min_val, max_val, step, key):
         row = BoxLayout(
             orientation='vertical',
             size_hint_y=None,
@@ -276,11 +276,12 @@ class SettingsScreen(Screen):
         slider = Slider(
             min=min_val,
             max=max_val,
+            step=step,
             value=default
         )
 
         def update_label(instance, value):
-            label.text = f"{text}: {int(value)}"
+            label.text = f"{text}: {value}"
 
         slider.bind(value=update_label)
 
