@@ -186,15 +186,9 @@ class SettingsScreen(Screen):
         self.add_group_label("Last.fm")
         self.add_text_setting("Username", "lastfm_username")
         self.add_text_setting("Max tracks pulled", "lastfm_limit", input_filter="int")
-        self.add_choice_setting("Pull period", ["overall", "7day", "1month", "3month", "6month", "12month"], "lastfm_period")
-
-        for i in range(20):
-            btn = Button(
-                text=f"Extra Setting {i}",
-                size_hint_y=None,
-                height=40
-            )
-            self.layout.add_widget(btn)
+        self.add_choice_setting("Pull period", [("All time", "overall"), ("7 Days", "7day"), ("1 Month", "1month"), ("3 Months", "3month"), ("6 Months", "6month"), ("12 Months", "12month")], "lastfm_period")
+        
+        #endregion
 
         scroll_view = ScrollView(size_hint=(1, 1))
         scroll_view.add_widget(self.layout)
@@ -203,7 +197,6 @@ class SettingsScreen(Screen):
 
         self.add_widget(root)
 
-    #endregion
     #region helpers
 
     def get_default_value(self, key):
@@ -220,7 +213,6 @@ class SettingsScreen(Screen):
         )
 
     def add_toggle_setting(self, text, key):
-        ### TODO: Default value for toggle settings ###
         row = BoxLayout(
             orientation='horizontal',
             size_hint_y=None,
@@ -228,7 +220,7 @@ class SettingsScreen(Screen):
         )
 
         label = Label(text=text, halign='left')
-        toggle = Switch(active=True)
+        toggle = Switch(active=self.get_default_value(key))
 
         row.add_widget(label)
         row.add_widget(toggle)
@@ -237,7 +229,7 @@ class SettingsScreen(Screen):
 
         self.layout.add_widget(row)
 
-    def add_choice_setting(self, text, values: list, key):
+    def add_choice_setting(self, text, values: list[tuple[str, str]], key):
         row = BoxLayout(
             orientation='horizontal',
             size_hint_y=None,
@@ -246,10 +238,17 @@ class SettingsScreen(Screen):
 
         label = Label(text=text)
 
+        values_map = dict(values)
+
+        display, values = [list(a) for a in zip(*values)]
+        default_value = display[values.index(self.get_default_value(key))]
+
         spinner = Spinner(
-            text=self.get_default_value(key),
-            values=values
+            text=default_value,
+            values=display
         )
+
+        spinner._values_map = values_map
 
         row.add_widget(label)
         row.add_widget(spinner)
@@ -338,9 +337,14 @@ class SettingsScreen(Screen):
             
             elif isinstance(widget, Spinner):
                 value = widget.text
+                value = widget._values_map[value]
             
             else:
                 logger.warning("Widget in settings with not a known type")
+                continue
+                
+            # Skip unchanged fields
+            if value == settings.get(key):
                 continue
     
             logger.debug(f"Saving \"{key}\" as \"{value}\"")
