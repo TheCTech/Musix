@@ -15,7 +15,7 @@ import logging
 from threading import Thread
 
 from services.spotify import validate_spotify_token, authenticate_spotify
-from utils.utils import get_app, get_settings
+from utils.utils import get_app, get_settings, handle_spotify_authentication_button
 
 logger = logging.getLogger(__name__)
 
@@ -110,13 +110,6 @@ class HomeScreen(Screen):
         )
         self.layout.add_widget(self.settings_button)
 
-        self.spotify_button = Button(
-            text="SPOTIFY",
-            font_size=14,
-            on_press=lambda _: Thread(target=authenticate_spotify, daemon=True).start(),
-        )
-        self.layout.add_widget(self.spotify_button)
-
         self.add_widget(self.layout)
 
         Clock.schedule_once(lambda dt: Thread(target=self.validate_spotify, daemon=True).start(), 0)
@@ -127,7 +120,6 @@ class HomeScreen(Screen):
 
         if sp is not None:
             Clock.schedule_once(lambda dt: setattr(self.play_button, "disabled", False), 0)
-            Clock.schedule_once(lambda dt: self.layout.remove_widget(self.spotify_button), 0)
             return
         
         Clock.schedule_once(lambda dt: Thread(target=self.validate_spotify, daemon=True).start(), 5)
@@ -182,6 +174,9 @@ class SettingsScreen(Screen):
 
         self.add_group_label("General")
         self.add_slider_setting("Round length", 3, 25, 1, "round_length")
+
+        self.add_group_label("Spotify")
+        self.add_button("Spotify connection", "Connect" if not validate_spotify_token() != None else "Disconnect", on_press=lambda button: handle_spotify_authentication_button(validate_spotify_token(), button))
         
         self.add_group_label("Last.fm")
         self.add_text_setting("Username", "lastfm_username")
@@ -226,6 +221,26 @@ class SettingsScreen(Screen):
         row.add_widget(toggle)
 
         self.inputs[key] = toggle
+
+        self.layout.add_widget(row)
+    
+    def add_button(self, label_text, button_text, on_press):
+        row = BoxLayout(
+            orientation='horizontal',
+            size_hint_y=None,
+            height=50
+        )
+
+        label = Label(text=label_text)
+
+
+        button = Button(
+            text=button_text,
+            on_press=on_press
+        )
+
+        row.add_widget(label)
+        row.add_widget(button)
 
         self.layout.add_widget(row)
 

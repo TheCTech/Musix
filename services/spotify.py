@@ -29,7 +29,8 @@ def authenticate_spotify():
             scope=scope,
             cache_path="cache/spotify_token.json"
         )
-    print(SpotifyOAuth.get_access_token(auth_manager))
+    SpotifyOAuth.get_access_token(auth_manager)
+    logger.debug("Spotify authenticated, token received")
 
 def get_spotify():
     global sp
