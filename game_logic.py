@@ -1,6 +1,7 @@
 from kivy.clock import Clock
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.textinput import TextInput
+from kivy.uix.label import Label
 from kivy.uix.screenmanager import ScreenManager, Screen
 
 import logging
@@ -23,7 +24,7 @@ class GuessScreen(Screen):
 
         layout = BoxLayout(orientation="vertical")
 
-        self.label = TextInput(readonly=True)
+        self.label = Label(markup=True)
         layout.add_widget(self.label)
 
         self.input_bar = TextInput(
@@ -44,6 +45,10 @@ class GuessScreen(Screen):
         self.artist_guessed = False
 
         self.update_display()
+
+        self.input_bar.disabled = False
+        if get_settings().get("input_autofocus"):
+            self.input_bar.focus = True
 
         self.ready = True
 
@@ -77,10 +82,13 @@ class GuessScreen(Screen):
         title = self.lastfm_track.name if self.title_guessed else "XXXX"
         artist = self.lastfm_track.artist if self.artist_guessed else "XXXX"
 
-        self.label.text = f"{title} by {artist}"
+        self.label.text = f"{title} [color=888888]by[/color] {artist}"
     
     def finish(self):
-        self.label.text = f"{self.lastfm_track.name} by {self.lastfm_track.artist} YEEEH"
+        self.update_display()
+        self.label.text += " [b]YEEEH[/b]"
+
+        self.input_bar.disabled = True
 
         self.current_track_id += 1
         if self.current_track_id > len(self.tracks)-1:
@@ -138,6 +146,7 @@ def play():
 
     if not verify_user(lastfm_username):
         show_error("Last.fm user not found, please specify the correct username in settings")
+        return
 
     top_tracks = get_top_tracks(lastfm_username, limit=settings.get("lastfm_limit"))
 

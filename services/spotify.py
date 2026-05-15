@@ -97,6 +97,7 @@ def play_song(query) -> tuple[PlayResult, SpotifyTrackData | None]:
     logger.debug(f"Searching for {query}")
 
     try:
+        ### TODO: Fetch more and validate correct title ###
         results = client.search(q=query, type="track", limit=1)
     except spotipy.SpotifyException as e:
         from utils.ui_utils import show_error
@@ -118,8 +119,9 @@ def play_song(query) -> tuple[PlayResult, SpotifyTrackData | None]:
     if not device_id:
         return PlayResult.NO_SPOTIFY, None
 
-    client.start_playback(device_id=device_id, uris=[uri])
-    set_repeat(device_id=device_id)
+    if not get_settings().get("spotify_do_not_disturb_mode"):
+        client.start_playback(device_id=device_id, uris=[uri])
+        set_repeat(device_id=device_id)
 
     get_settings().set("last_device", device_id)
 

@@ -8,9 +8,13 @@ class Settings:
     FILE = "cache/user_settings.json"
     DEFAULTS = {
         "round_length": 10,
+        "input_autofocus": True,
         "lastfm_limit": 100,
         "lastfm_period": "overall",
-        "lastfm_username": ""
+        "lastfm_username": "",
+
+        "debug_mode": False,
+        "spotify_do_not_disturb_mode": False
     }
 
     def __init__(self):

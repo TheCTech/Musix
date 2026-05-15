@@ -12,6 +12,7 @@ from kivy.clock import Clock
 from kivy.core.window import Window
 
 import logging
+import shutil
 from threading import Thread
 
 from services.spotify import validate_spotify_token
@@ -84,6 +85,7 @@ def show_error(error_text, notify_support_prompt=False, fatal_error=False):
     app.error_screen.set_error(message)
     if fatal_error:
         logger.error("Fatal error, showing error screen with disabled close button")
+        logger.info(f"Error: {error_text}")
         app.error_screen.prepare_button(fatal_error=True)
 
     def switch_screen(_):
@@ -184,6 +186,7 @@ class SettingsScreen(Screen):
 
         self.add_group_label("General")
         self.add_slider_setting("Round length", 3, 25, 1, "round_length")
+        self.add_toggle_setting("Input autofocus", "input_autofocus")
 
         self.add_group_label("Spotify")
         self.add_button("Spotify connection", "Connect" if not validate_spotify_token() != None else "Disconnect", on_press=lambda button: handle_spotify_authentication_button(validate_spotify_token(), button))
@@ -193,6 +196,12 @@ class SettingsScreen(Screen):
         self.add_text_setting("Max tracks pulled", "lastfm_limit", input_filter="int")
         self.add_choice_setting("Pull period", [("All time", "overall"), ("7 Days", "7day"), ("1 Month", "1month"), ("3 Months", "3month"), ("6 Months", "6month"), ("12 Months", "12month")], "lastfm_period")
         
+        if get_settings().get("debug_mode"):
+            self.add_group_label("Debug")
+            self.add_toggle_setting("Debug mode", "debug_mode")
+            self.add_toggle_setting("Spotify DND mode", "spotify_do_not_disturb_mode")
+            self.add_button("Clear cache", "Clear", lambda _: (shutil.rmtree("cache"), show_error("The app needs to restart after cache removal", fatal_error=True)))
+
         #endregion
 
         scroll_view = ScrollView(size_hint=(1, 1))
