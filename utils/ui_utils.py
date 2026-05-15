@@ -14,7 +14,7 @@ from kivy.core.window import Window
 import logging
 from threading import Thread
 
-from services.spotify import validate_spotify_token, authenticate_spotify
+from services.spotify import validate_spotify_token
 from utils.utils import get_app, get_settings, handle_spotify_authentication_button
 
 logger = logging.getLogger(__name__)
@@ -43,17 +43,22 @@ class ErrorScreen(Screen):
 
         layout.add_widget(self.label)
 
-        close_btn = Button(
-            text="Close",
+        self.close_btn = Button(
             size_hint_y=None,
             height=60
         )
 
-        close_btn.bind(on_release=lambda _: self.close_screen())
+        self.prepare_button()
 
-        layout.add_widget(close_btn)
+        self.close_btn.bind(on_release=lambda _: self.close_screen())
+
+        layout.add_widget(self.close_btn)
 
         self.add_widget(layout)
+    
+    def prepare_button(self, fatal_error=False):
+        self.close_btn.text = "Close" if not fatal_error else "Fatal error, please restart the app"
+        self.close_btn.disabled = True if fatal_error else False
 
     def close_screen(self):
         Clock.schedule_once(lambda dt: setattr(get_app().sm, "current", "home_screen"))
@@ -61,7 +66,7 @@ class ErrorScreen(Screen):
     def set_error(self, text):
         self.label.text = text
 
-def show_error(error_text, notify_support_prompt=False):
+def show_error(error_text, notify_support_prompt=False, fatal_error=False):
     app = get_app()
 
     old_sm_transition = app.sm.transition
@@ -77,9 +82,14 @@ def show_error(error_text, notify_support_prompt=False):
         )
 
     app.error_screen.set_error(message)
+    if fatal_error:
+        logger.error("Fatal error, showing error screen with disabled close button")
+        app.error_screen.prepare_button(fatal_error=True)
 
     def switch_screen(_):
-        setattr(app.sm, "current", "error_screen")
+        app.sm.current = "error_screen"
+        if fatal_error:
+            app.sm.lock()
         app.sm.transition = old_sm_transition
 
     Clock.schedule_once(switch_screen)

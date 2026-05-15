@@ -1,3 +1,5 @@
+from kivy.clock import Clock
+
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
@@ -29,8 +31,22 @@ def authenticate_spotify():
             scope=scope,
             cache_path="cache/spotify_token.json"
         )
-    SpotifyOAuth.get_access_token(auth_manager)
-    logger.debug("Spotify authenticated, token received")
+    
+    try:
+        token = SpotifyOAuth.get_access_token(auth_manager)
+
+        if not token:
+            raise spotipy.exceptions.SpotifyOauthError("No token returned")
+
+        logger.debug("Spotify authenticated, token received")
+        return True
+    except spotipy.exceptions.SpotifyOauthError as e:
+        pass
+
+    from utils.ui_utils import show_error
+    logger.error("Failed to authenticate spotify")
+    show_error("Failed to authenticate spotify", fatal_error=True) # If user doesn't grant the permission to use spotify the spotipy crashes, you need to restart the app
+    return False
 
 def get_spotify():
     global sp

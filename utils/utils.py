@@ -1,7 +1,9 @@
 import re
 import logging
+from typing import Any
 from kivy.app import App
 from kivy.clock import Clock
+from kivy.uix.screenmanager import ScreenManager
 
 from threading import Thread
 
@@ -38,7 +40,13 @@ def handle_spotify_authentication_button(is_spotify, button_instance): # False f
         if not is_spotify:
             logger.debug("Trying to authenticate spotify")
             from services.spotify import authenticate_spotify
-            authenticate_spotify()
+            sp_auth_return = authenticate_spotify()
+
+            if not sp_auth_return:
+                button_instance.text = "ERROR"
+                return # Do not continue
+
+            button_instance.text = "Disconnect"
         else:
             logger.debug("Removing spotify token from cache")
             from os import remove
@@ -46,10 +54,22 @@ def handle_spotify_authentication_button(is_spotify, button_instance): # False f
 
             app.home_screen.play_button.disabled = True
             app.home_screen.validate_spotify()
-        
-        
-        button_instance.text = "Connect" if is_spotify else "Disconnect"
+
+            button_instance.text = "Connect"
 
         Clock.schedule_once(lambda dt: setattr(app.sm, "current", "settings_screen")) # In general changing ui from background thread is a bad practice but with loading screen it should,'t be such a big deal, right? :)
 
     Thread(target=main_logic, daemon=True).start()
+
+class LockableScreenManager(ScreenManager):
+    _locked = False
+    
+    def lock(self):
+        logger.debug("Locking screen manager")
+        self._locked = True
+    
+    def __setattr__(self, name, value):
+        if name == "current" and self._locked == True:
+            logger.warning("Tried to change screen when screen manager was locked")
+            return
+        super().__setattr__(name, value)

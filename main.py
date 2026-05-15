@@ -1,5 +1,4 @@
 from kivy.app import App
-from kivy.uix.screenmanager import ScreenManager
 
 import sys
 import os
@@ -8,6 +7,7 @@ from colorlog import ColoredFormatter
 
 from game_logic import GuessScreen
 from utils.ui_utils import LoadingScreen, HomeScreen, ErrorScreen, SettingsScreen, show_error
+from utils.utils import LockableScreenManager
 from data_persistency import Settings
 
 from logging.handlers import RotatingFileHandler
@@ -81,7 +81,7 @@ class MusixApp(App):
     
         self.settings_obj = Settings()
 
-        self.sm = ScreenManager()
+        self.sm = LockableScreenManager()
 
         self.home_screen = HomeScreen(name="home_screen")
         self.sm.add_widget(self.home_screen)
