@@ -24,7 +24,7 @@ def verify_user(username):
         logger.debug("Client exists")
         return True
     
-    logger.warning(f"User not found, error code: {data["error"]}")
+    logger.warning(f"User not found, error code: {data['error']}")
     return False
 
 def get_top_tracks(username, period="overall", limit=100) -> list[LastfmTrack]:
