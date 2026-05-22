@@ -2,6 +2,8 @@
 .env
 settings.json
 
+secrets.py
+
 __pycache__
 cache
 logs

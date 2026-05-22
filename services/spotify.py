@@ -7,6 +7,7 @@ import logging
 
 from utils.models import PlayResult, SpotifyTrackData
 from utils.utils import get_settings
+from secrets import SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,10 @@ def validate_spotify_token():
 
     auth_manager = SpotifyOAuth(
             scope=scope,
-            cache_path="cache/spotify_token.json"
+            cache_path="cache/spotify_token.json",
+            client_id=SPOTIFY_CLIENT_ID,
+            client_secret=SPOTIFY_CLIENT_SECRET,
+            redirect_uri=SPOTIFY_REDIRECT_URI
         )
 
     token_info = auth_manager.validate_token(cache_handler.get_cached_token())
@@ -29,7 +33,10 @@ def validate_spotify_token():
 def authenticate_spotify():
     auth_manager = SpotifyOAuth(
             scope=scope,
-            cache_path="cache/spotify_token.json"
+            cache_path="cache/spotify_token.json",
+            client_id=SPOTIFY_CLIENT_ID,
+            client_secret=SPOTIFY_CLIENT_SECRET,
+            redirect_uri=SPOTIFY_REDIRECT_URI
         )
     
     try:
@@ -54,7 +61,10 @@ def get_spotify():
     if sp is None:
         auth_manager = SpotifyOAuth(
             scope=scope,
-            cache_path="cache/spotify_token.json"
+            cache_path="cache/spotify_token.json",
+            client_id=SPOTIFY_CLIENT_ID,
+            client_secret=SPOTIFY_CLIENT_SECRET,
+            redirect_uri=SPOTIFY_REDIRECT_URI
         )
 
         sp = spotipy.Spotify(auth_manager=auth_manager)

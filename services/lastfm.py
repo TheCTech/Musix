@@ -1,11 +1,10 @@
 import requests
-import dotenv
 import logging
 from utils.models import LastfmTrack
+from secrets import LASTFM_API_KEY
 
 logger = logging.getLogger(__name__)
 
-LASTFM_API_KEY = dotenv.get_key(".env", "LASTFM_API_KEY")
 
 def verify_user(username):
     logger.debug(f"Verifying user \"{username}\" exists on lastfm")
