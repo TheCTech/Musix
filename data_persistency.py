@@ -13,7 +13,7 @@ class Settings:
         "lastfm_period": "overall",
         "lastfm_username": "",
 
-        "debug_mode": False,
+        "debug_mode": True,
         "spotify_do_not_disturb_mode": False
     }
 

@@ -10,6 +10,7 @@ from kivy.uix.switch import Switch
 from kivy.uix.spinner import Spinner
 from kivy.clock import Clock
 from kivy.core.window import Window
+from kivy.uix.widget import Widget
 
 import logging
 import shutil
@@ -46,7 +47,7 @@ class ErrorScreen(Screen):
 
         self.close_btn = Button(
             size_hint_y=None,
-            height=60
+            height=150
         )
 
         self.prepare_button()
@@ -58,7 +59,7 @@ class ErrorScreen(Screen):
         self.add_widget(layout)
     
     def prepare_button(self, fatal_error=False):
-        self.close_btn.text = "Close" if not fatal_error else "Fatal error, please restart the app"
+        self.close_btn.text = "Close" if not fatal_error else f"Fatal error, please restart the app {str(self.label.font_size)}"
         self.close_btn.disabled = True if fatal_error else False
 
     def close_screen(self):
@@ -102,14 +103,17 @@ class HomeScreen(Screen):
 
         self.layout = BoxLayout(orientation="vertical")
 
-        label = Label(text="main")
+        label = Label(
+            text="main",
+            font_size=45
+            )
         self.layout.add_widget(label)
 
         from game_logic import play
 
         self.play_button = Button(
             text="PLAY",
-            font_size=14,
+            #font_size=14,
             on_press=lambda _: Thread(target=play, daemon=True).start(),
             disabled=True
         )
@@ -117,7 +121,7 @@ class HomeScreen(Screen):
 
         self.settings_button = Button(
             text="Settings",
-            font_size=14,
+            font_size=45,
             on_press=lambda _: setattr(get_app().sm, "current", "settings_screen"),
         )
         self.layout.add_widget(self.settings_button)
@@ -149,7 +153,7 @@ class SettingsScreen(Screen):
         top_bar = BoxLayout(
             orientation='horizontal',
             size_hint_y=None,
-            height=60,
+            height=120,
             spacing=10,
             padding=10
         )
@@ -157,7 +161,7 @@ class SettingsScreen(Screen):
         left = Label(
             text="Settings",
             size_hint_x=0.85,
-            font_size=24
+            font_size=45
         )
 
         right = Button(
@@ -173,8 +177,8 @@ class SettingsScreen(Screen):
 
         self.layout = GridLayout(
             cols=1,
-            spacing=10,
-            padding=10,
+            spacing=25,
+            padding=20,
             size_hint_y=None
         )
         self.layout.bind(
@@ -220,9 +224,9 @@ class SettingsScreen(Screen):
         self.layout.add_widget(
             Label(
                 text=text,
-                size_hint_y=None,
-                height=40,
-                font_size=18
+                size_hint_y=None,\
+                height=80,
+                font_size=50
             )
         )
 
@@ -247,7 +251,7 @@ class SettingsScreen(Screen):
         row = BoxLayout(
             orientation='horizontal',
             size_hint_y=None,
-            height=50
+            height=75
         )
 
         label = Label(text=label_text)
@@ -267,7 +271,7 @@ class SettingsScreen(Screen):
         row = BoxLayout(
             orientation='horizontal',
             size_hint_y=None,
-            height=50
+            height=75
         )
 
         label = Label(text=text)
@@ -295,7 +299,8 @@ class SettingsScreen(Screen):
         row = BoxLayout(
             orientation='vertical',
             size_hint_y=None,
-            height=90
+            height=120,
+            spacing=10
         )
 
         default = self.get_default_value(key)
@@ -318,7 +323,9 @@ class SettingsScreen(Screen):
 
         slider.bind(value=update_label)
 
+        row.add_widget(Widget(size_hint_y=None, height=8))
         row.add_widget(label)
+        row.add_widget(Widget(size_hint_y=None, height=6))
         row.add_widget(slider)
 
         self.inputs[key] = slider
@@ -329,7 +336,7 @@ class SettingsScreen(Screen):
         row = BoxLayout(
             orientation='vertical',
             size_hint_y=None,
-            height=80
+            height=120
         )
 
         label = Label(
@@ -343,10 +350,11 @@ class SettingsScreen(Screen):
             multiline=False,
             size_hint_y=None,
             input_filter=input_filter,
-            height=40
+            height=60
         )
 
         row.add_widget(label)
+        row.add_widget(Widget(size_hint_y=None, height=10))
         row.add_widget(input_box)
 
         self.inputs[key] = input_box
