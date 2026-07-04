@@ -59,7 +59,7 @@ class ErrorScreen(Screen):
         self.add_widget(layout)
     
     def prepare_button(self, fatal_error=False):
-        self.close_btn.text = "Close" if not fatal_error else f"Fatal error, please restart the app {str(self.label.font_size)}"
+        self.close_btn.text = "Close" if not fatal_error else "Fatal error, please restart the app"
         self.close_btn.disabled = True if fatal_error else False
 
     def close_screen(self):
@@ -202,7 +202,7 @@ class SettingsScreen(Screen):
         
         if get_settings().get("debug_mode"):
             self.add_group_label("Debug")
-            self.add_toggle_setting("Debug mode", "debug_mode")
+            self.add_button("Disable debug mode", "Disable", lambda _: (get_settings().set("debug_mode", False), show_error("Debug mode disabled, please restart the app", fatal_error=True)))
             self.add_toggle_setting("Spotify DND mode", "spotify_do_not_disturb_mode")
             self.add_button("Clear cache", "Clear", lambda _: (shutil.rmtree("cache"), show_error("The app needs to restart after cache removal", fatal_error=True)))
 
@@ -371,6 +371,12 @@ class SettingsScreen(Screen):
                 if widget.input_filter == "int":
                     value = int(value)
                 
+                if key == "lastfm_username" and value == "#DEBUG":
+                    settings.set("debug_mode", True)
+                    logger.warning("Debug mode activated")
+                    self.debug_mode_activated = True
+                    continue
+                
             elif isinstance(widget, Slider):
                 value = widget.value
             
@@ -391,6 +397,11 @@ class SettingsScreen(Screen):
     
             logger.debug(f"Saving \"{key}\" as \"{value}\"")
             settings.set(key, value)
+        
+
+        if self.debug_mode_activated:
+            show_error("Debug mode activated, please restart the app.", fatal_error=True)
+            return
         
         Clock.schedule_once(lambda dt: setattr(get_app().sm, "current", "home_screen"))
 

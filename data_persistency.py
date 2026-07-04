@@ -13,9 +13,11 @@ class Settings:
         "lastfm_period": "overall",
         "lastfm_username": "",
 
-        "debug_mode": True,
+        "debug_mode": True, ### TODO: Change default debug_mode to False ###
         "spotify_do_not_disturb_mode": False
     }
+
+    ### TODO: Store only changed settings ###
 
     def __init__(self):
         self.data = self.load()
