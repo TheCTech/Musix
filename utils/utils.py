@@ -21,13 +21,6 @@ def get_app() -> App:
 def get_settings():
     return get_app().settings_obj
 
-def get_lastfm_username():
-    while True:
-        username = input("Enter Last.fm username: ").strip()
-        if username:
-            return username
-
-
 def normalize(text: str) -> str:
     text = text.lower().strip()
     return re.sub(r"[^a-z0-9]+", "", text)
