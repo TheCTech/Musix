@@ -11,6 +11,8 @@ from kivy.uix.spinner import Spinner
 from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.uix.widget import Widget
+from kivy.graphics import Color, Rectangle
+from kivy.uix.progressbar import ProgressBar
 
 import logging
 import shutil
@@ -407,3 +409,57 @@ class SettingsScreen(Screen):
         Clock.schedule_once(lambda dt: setattr(get_app().sm, "current", "home_screen"))
 
     #endregion
+
+from kivy.graphics import Color, BorderImage
+from kivy.uix.progressbar import ProgressBar
+
+
+class ColoredProgressBar(ProgressBar):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.bar_source = "assets/progress_blue.png"
+
+        self.canvas.clear() # type: ignore
+
+        with self.canvas: # type: ignore
+            Color(1, 1, 1, 1)
+
+            self.bg = BorderImage(
+                source="atlas://data/images/defaulttheme/progressbar_background",
+                border=(12, 12, 12, 12),
+            )
+
+            self.fg = BorderImage(
+                source=self.bar_source,
+                border=(12, 12, 12, 12),
+            )
+
+        self.bind(pos=self.update_canvas,
+                  size=self.update_canvas,
+                  value=self.update_canvas,
+                  max=self.update_canvas)
+
+        self.update_canvas()
+
+    def set_blue(self):
+        self.bar_source = "assets/progress_blue.png"
+        self.fg.source = self.bar_source
+
+    def set_yellow(self):
+        self.bar_source = "assets/progress_yellow.png"
+        self.fg.source = self.bar_source
+
+    def update_canvas(self, *args):
+        self.bg.pos = (self.x, self.center_y - 12)
+        self.bg.size = (self.width, 24)
+
+        width = 0
+        if self.max:
+            width = self.width * self.value / self.max
+
+        self.fg.pos = (self.x, self.center_y - 12)
+        self.fg.size = (width, 24)
+
+        border = min(int(width), 12)
+        self.fg.border = (border, border, border, border)

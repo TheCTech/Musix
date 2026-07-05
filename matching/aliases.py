@@ -6,33 +6,54 @@ from utils.models import LastfmTrack, SpotifyTrackData
 
 logger = logging.getLogger(__name__)
 
+NOISE_PATTERNS = [
+    r"\s*\(.*?remaster.*?\)",
+    r"\s*\(.*?remastered.*?\)",
+    r"\s*\(.*?radio edit.*?\)",
+    r"\s*\(.*?live.*?\)",
+    r"\s*-\s*(remaster|remastered|radio edit|live)\b.*$",
+]
+
+def strip_noise(text: str) -> str:
+    text = text.lower()
+    for pattern in NOISE_PATTERNS:
+        text = re.sub(pattern, "", text, flags=re.IGNORECASE)
+    return text.strip()
+
+
 def split_title_variants(text: str) -> list[str]:
-        text = text.lower()
+    text = text.lower()
+    text = strip_noise(text)
 
-        # literal magic, dont touch will break
-        no_remaster = re.sub(r"\s*remaster.*$", "", text)
-        no_dash = re.sub(r"\s*-.*$", "", no_remaster)
+    # split on parentheses content
+    inside = re.findall(r"\((.*?)\)", text)
+    base = re.sub(r"\(.*?\)", "", text)
 
-        inside = re.findall(r"\((.*?)\)", no_dash)
-        base = re.sub(r"\(.*?\)", "", no_dash)
+    base_clean = normalize(base)
+    extras = [normalize(x) for x in inside]
 
-        base_clean = normalize(base)
-        extras = [normalize(x) for x in inside]
+    variants = set()
 
-        variants = set()
+    if base_clean:
+        variants.add(base_clean)
 
-        if base_clean:
-            variants.add(base_clean)
-
-        for e in extras:
-            if e:
-                variants.add(e)
+    for e in extras:
+        if e:
+            variants.add(e)
+            if base_clean:
                 variants.add(base_clean + e)
 
-        if not variants:
-            variants.add(normalize(text))
+    # IMPORTANT: keep dash-split candidates instead of deleting them
+    dash_parts = [p.strip() for p in re.split(r"\s*-\s*", text) if p.strip()]
+    for part in dash_parts:
+        norm = normalize(part)
+        if norm:
+            variants.add(norm)
 
-        return list(variants)
+    if not variants:
+        variants.add(normalize(text))
+
+    return list(variants)
 
 class TrackAnswerAliases:    
     def __init__(self, lastfm_track: LastfmTrack, spotify_track: SpotifyTrackData):

@@ -6,6 +6,7 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.image import AsyncImage
 from kivy.loader import Loader
 from kivy.uix.widget import Widget
+from kivy.uix.progressbar import ProgressBar
 
 import logging
 import random
@@ -15,13 +16,15 @@ from services.spotify import play_song, PlayResult
 from matching.aliases import TrackAnswerAliases
 from matching.matching import analyze_guess
 from utils.utils import get_app, get_settings
-from utils.ui_utils import show_error
+from utils.ui_utils import show_error, ColoredProgressBar
 
 logger = logging.getLogger(__name__)
 
 class GuessScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        self.progress_event = None
 
         self.ready = False
 
@@ -30,9 +33,9 @@ class GuessScreen(Screen):
         # Top bar
 
         top_bar = BoxLayout(
-            orientation="horizontal",
+            orientation="vertical",
             size_hint_y=None,
-            height=120,
+            height=140,
             padding=10,
         )
 
@@ -43,6 +46,16 @@ class GuessScreen(Screen):
         )
 
         top_bar.add_widget(self.round_label)
+
+        self.progressbar = ColoredProgressBar(
+            max=60,
+            value=0,
+            size_hint_y=None,
+            height=20
+        )
+
+        top_bar.add_widget(self.progressbar)
+
         layout.add_widget(top_bar)
 
         # Ans bar
@@ -92,6 +105,50 @@ class GuessScreen(Screen):
 
         ### TODO: Not really happy with this layout ###
 
+    def progressbar_tick(self, max_value, end_function=None):
+        self.progressbar.value += 0.025
+
+        if self.progressbar.value >= max_value:
+            if self.progress_event:
+                self.progress_event.cancel()
+                self.progress_event = None
+
+            if end_function:
+                end_function()
+
+            return False
+    def start_song_timer(self):
+        if self.progress_event:
+            self.progress_event.cancel()
+
+        self.progressbar.max = 60
+        self.progressbar.value = 0
+        self.progressbar.set_blue()
+
+        self.progress_event = Clock.schedule_interval(
+            lambda dt: self.progressbar_tick(60, self.skip),
+            0.025
+        )
+    
+    def start_prepare_round_timer(self, override_function=None):
+        if self.progress_event:
+            self.progress_event.cancel()
+
+        self.progressbar.max = 5
+        self.progressbar.value = 0
+        self.progressbar.set_yellow()
+
+        if override_function is None:
+            self.progress_event = Clock.schedule_interval(
+                lambda dt: self.progressbar_tick(5, self.prepare_round),
+                0.025
+            )
+        else:
+            self.progress_event = Clock.schedule_interval(
+                lambda dt: self.progressbar_tick(5, lambda: override_function()),
+                0.025
+            )
+
     def start_guessing(self):
         self.answer_aliases = TrackAnswerAliases(self.lastfm_track, self.spotify_track)
 
@@ -99,6 +156,7 @@ class GuessScreen(Screen):
         self.artist_guessed = False
 
         self.update_display()
+        self.start_song_timer()
 
         self.cover_image.source = "assets/unknown_cover.png"
 
@@ -110,6 +168,11 @@ class GuessScreen(Screen):
             self.input_bar.focus = True
 
         self.ready = True
+    
+    def skip(self):
+        self.title_guessed = True
+        self.artist_guessed = True
+        self.finish()
 
     def on_text_enter(self, instance):
         user_input = instance.text.strip()
@@ -119,9 +182,7 @@ class GuessScreen(Screen):
             return
 
         if user_input == "skip":
-            self.title_guessed = True
-            self.artist_guessed = True
-            self.finish()
+            self.skip()
             return
 
         result = analyze_guess(user_input, self.answer_aliases)
@@ -146,6 +207,12 @@ class GuessScreen(Screen):
         self.label.text = f"{title} [color=888888]by[/color] {artist}"
     
     def finish(self):
+        self.ready = False
+
+        if self.progress_event:
+            self.progress_event.cancel()
+            self.progress_event = None
+
         self.update_display()
 
         self.input_bar.disabled = True
@@ -154,11 +221,11 @@ class GuessScreen(Screen):
 
         self.current_track_id += 1
         if self.current_track_id > len(self.tracks)-1:
-            Clock.schedule_once(lambda dt: setattr(get_app().sm, "current", "home_screen"), 0) 
+            self.start_prepare_round_timer(override_function=lambda: setattr(get_app().sm, "current", "home_screen"))
             return
         ### TODO: scoring###
 
-        Clock.schedule_once(lambda dt: self.prepare_round(), 5) 
+        self.start_prepare_round_timer()
     
     def prepare_round(self):
         self.round_label.text = (
