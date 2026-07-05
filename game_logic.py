@@ -36,7 +36,7 @@ class GuessScreen(Screen):
             orientation="vertical",
             size_hint_y=None,
             height=140,
-            padding=10,
+            padding=(30, 10, 30, 10),
         )
 
         self.round_label = Label(

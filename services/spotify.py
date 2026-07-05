@@ -122,6 +122,8 @@ def play_song(query) -> tuple[PlayResult, SpotifyTrackData | None]:
     track = results["tracks"]["items"][0] # type: ignore
     uri = track["uri"]
 
+    logger.debug(f"Found track with name: {track['name']} and id {track["id"]}")
+
     album_image = track["album"]["images"][0]["url"]
 
     logger.debug(f"Playing: {track['name']} - {track['artists'][0]['name']}")
