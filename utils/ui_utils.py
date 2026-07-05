@@ -363,6 +363,7 @@ class SettingsScreen(Screen):
 
     def save_and_quit(self, instance):
         settings = get_settings()
+        debug_mode_activated = False
 
         for key, widget in self.inputs.items():
             if isinstance(widget, TextInput):
@@ -374,7 +375,7 @@ class SettingsScreen(Screen):
                 if key == "lastfm_username" and value == "#DEBUG":
                     settings.set("debug_mode", True)
                     logger.warning("Debug mode activated")
-                    self.debug_mode_activated = True
+                    debug_mode_activated = True
                     continue
                 
             elif isinstance(widget, Slider):
@@ -399,7 +400,7 @@ class SettingsScreen(Screen):
             settings.set(key, value)
         
 
-        if self.debug_mode_activated:
+        if debug_mode_activated:
             show_error("Debug mode activated, please restart the app.", fatal_error=True)
             return
         

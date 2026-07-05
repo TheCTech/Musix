@@ -122,6 +122,8 @@ def play_song(query) -> tuple[PlayResult, SpotifyTrackData | None]:
     track = results["tracks"]["items"][0] # type: ignore
     uri = track["uri"]
 
+    album_image = track["album"]["images"][0]["url"]
+
     logger.debug(f"Playing: {track['name']} - {track['artists'][0]['name']}")
 
     device_id = get_active_device_id()
@@ -137,4 +139,4 @@ def play_song(query) -> tuple[PlayResult, SpotifyTrackData | None]:
 
     artists = [a["name"] for a in track["artists"]]
 
-    return PlayResult.OK, SpotifyTrackData(track["name"], artists)
+    return PlayResult.OK, SpotifyTrackData(track["name"], artists, album_image)

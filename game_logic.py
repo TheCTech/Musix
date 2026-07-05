@@ -3,6 +3,9 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.textinput import TextInput
 from kivy.uix.label import Label
 from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.uix.image import AsyncImage
+from kivy.loader import Loader
+from kivy.uix.widget import Widget
 
 import logging
 import random
@@ -24,27 +27,83 @@ class GuessScreen(Screen):
 
         layout = BoxLayout(orientation="vertical")
 
-        self.label = Label(markup=True)
-        layout.add_widget(self.label)
+        # Top bar
+
+        top_bar = BoxLayout(
+            orientation="horizontal",
+            size_hint_y=None,
+            height=120,
+            padding=10,
+        )
+
+        self.round_label = Label(
+            text="Loading...",
+            font_size=45,
+            halign="left",
+        )
+
+        top_bar.add_widget(self.round_label)
+        layout.add_widget(top_bar)
+
+        # Ans bar
+
+        ans_layout = BoxLayout(
+            orientation="vertical",
+            size_hint_y=0.35
+            )
+
+        self.cover_image = AsyncImage(
+            source="assets/unknown_cover.png",
+            allow_stretch=True,
+            keep_ratio=True
+        )
+        ans_layout.add_widget(self.cover_image)
+
+        self.label = Label(
+            markup=True,
+            text_size=(self.width, None),
+            size_hint_y=None,
+            height=120,
+            halign="center",
+            valign="middle",
+        )
+        self.label.bind(width=lambda *args: setattr(self.label, "text_size", (self.label.width, None)))
+        ans_layout.add_widget(self.label)
+
+        layout.add_widget(ans_layout)
+
+        # Input label
+
+        input_layout = BoxLayout(orientation="vertical")
 
         self.input_bar = TextInput(
             multiline=False,
-            on_text_validate=self.on_text_enter
+            on_text_validate=self.on_text_enter,
+            size_hint_y=None,
+            height=60
         )
-        layout.add_widget(self.input_bar)
+        input_layout.add_widget(self.input_bar)
+
+        input_layout.add_widget(Widget()) # spacer
+        
+        layout.add_widget(input_layout)
 
         self.add_widget(layout)
 
-    def start_guessing(self, lastfm_track, spotify_track):
-        self.lastfm_track = lastfm_track
-        self.spotify_track = spotify_track
+        ### TODO: Not really happy with this layout ###
 
-        self.answer_aliases = TrackAnswerAliases(lastfm_track, spotify_track)
+    def start_guessing(self):
+        self.answer_aliases = TrackAnswerAliases(self.lastfm_track, self.spotify_track)
 
         self.title_guessed = False
         self.artist_guessed = False
 
         self.update_display()
+
+        self.cover_image.source = "assets/unknown_cover.png"
+
+        # Preload cover image
+        Loader.image(self.spotify_track.image_url)
 
         self.input_bar.disabled = False
         if get_settings().get("input_autofocus"):
@@ -77,6 +136,8 @@ class GuessScreen(Screen):
             self.finish()
         else:
             self.update_display()
+            if get_settings().get("input_autofocus"):
+                Clock.schedule_once(lambda dt: setattr(self.input_bar, "focus", True), 0)
 
     def update_display(self):
         title = self.lastfm_track.name if self.title_guessed else "XXXX"
@@ -86,9 +147,10 @@ class GuessScreen(Screen):
     
     def finish(self):
         self.update_display()
-        self.label.text += " [b]YEEEH[/b]"
 
         self.input_bar.disabled = True
+
+        self.cover_image.source = self.spotify_track.image_url
 
         self.current_track_id += 1
         if self.current_track_id > len(self.tracks)-1:
@@ -99,6 +161,10 @@ class GuessScreen(Screen):
         Clock.schedule_once(lambda dt: self.prepare_round(), 5) 
     
     def prepare_round(self):
+        self.round_label.text = (
+            f"Round {self.current_track_id + 1} / {len(self.tracks)}"
+        )
+        
         track = self.tracks[self.current_track_id]
 
         logger.debug(f"{track.name} ({self.current_track_id+1}/{len(self.tracks)})")
@@ -123,8 +189,12 @@ class GuessScreen(Screen):
 
         if state == PlayResult.OK:
             logger.debug("OK (song should be playing)")
+
             assert spotify_data is not None
-            self.start_guessing(track, spotify_data)
+            self.lastfm_track = track
+            self.spotify_track = spotify_data
+            
+            self.start_guessing()
 
     def prepare_game(self, tracks):
         self.tracks = tracks

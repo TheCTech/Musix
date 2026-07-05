@@ -15,6 +15,7 @@ class LastfmTrack:
 
 
 class SpotifyTrackData:
-    def __init__(self, name, artists):
+    def __init__(self, name, artists, image_url):
         self.name = name
         self.artists = artists
+        self.image_url = image_url
