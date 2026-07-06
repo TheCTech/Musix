@@ -1,6 +1,8 @@
 import requests
 import logging
-from utils.models import LastfmTrack
+import random
+from utils.models import SpotifyTrackData
+from services.spotify import search_for_track
 from secrets import LASTFM_API_KEY
 
 logger = logging.getLogger(__name__)
@@ -26,7 +28,7 @@ def verify_user(username):
     logger.warning(f"User not found, error code: {data['error']}")
     return False
 
-def get_top_tracks(username, period="overall", limit=100) -> list[LastfmTrack]:
+def get_top_tracks(username, period="overall", limit=100, return_amount=10) -> list[tuple[str, SpotifyTrackData]]:
     logger.debug(f"Searching user {username}'s top tracks with settings: period={period}, limit={limit}")
     r = requests.get(
         "http://ws.audioscrobbler.com/2.0/",
@@ -45,20 +47,32 @@ def get_top_tracks(username, period="overall", limit=100) -> list[LastfmTrack]:
     # handle single-track edge case
     if isinstance(tracks_data, dict):
         tracks_data = [tracks_data]
+    
+
+    logger.debug(f"Got {len(tracks_data)} tracks")
+    if len(tracks_data) != limit:
+        logger.warning(f"Did not fetch {limit} tracks, possibly not enough data in the selected period?")
+    
+    random.shuffle(tracks_data)
 
     tracks = []
 
-    for t in tracks_data:
-        tracks.append(
-            LastfmTrack(
-                name=t["name"],
-                artist=t["artist"]["name"],
-                playcount=int(t["playcount"])
-            )
-        )
+    for t_data in tracks_data:
+        query = f"track:{t_data['name']} artist:{t_data['artist']['name']}"
 
-    logger.debug(f"Got {len(tracks)} tracks")
-    if len(tracks) != limit:
-        logger.warning(f"Did not fetch {limit} tracks, possibly not enough data in the selected period?")
+        track = search_for_track(query)
+
+        if track == None:
+            logger.warning(f"Could not find track using query: {query}")
+            continue
+            
+        assert track is not None
+
+        tracks.append(track)
+
+        if len(tracks) >= return_amount:
+            break
+
+    logger.debug(f"Returning {len(tracks)} tracks")
 
     return tracks

@@ -1,5 +1,3 @@
-from kivy.clock import Clock
-
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
@@ -101,7 +99,7 @@ def set_repeat(state="track", device_id=None):
     client.repeat(state, device_id=device_id)
 
 
-def play_song(query) -> tuple[PlayResult, SpotifyTrackData | None]:
+def search_for_track(query) -> tuple[str, SpotifyTrackData] | None:
     client = get_spotify()
 
     logger.debug(f"Searching for {query}")
@@ -113,32 +111,82 @@ def play_song(query) -> tuple[PlayResult, SpotifyTrackData | None]:
         from utils.ui_utils import show_error
         logger.exception("Spotify error")
         show_error(f"Spotipy error: {e.reason}", notify_support_prompt=True)
-        return PlayResult.ERROR, None
+        return None
 
     if not results["tracks"]["items"]: # type: ignore
         logger.warning(f"Song not found. ({query})")
-        return PlayResult.SONG_NOT_FOUND, None
+        return None
 
     track = results["tracks"]["items"][0] # type: ignore
     uri = track["uri"]
 
-    logger.debug(f"Found track with name: {track['name']} and id {track['id']}")
+    logger.debug(f"Found track with name: {track['name']}")
 
     album_image = track["album"]["images"][0]["url"]
 
-    logger.debug(f"Playing: {track['name']} - {track['artists'][0]['name']}")
+    artists = [a["name"] for a in track["artists"]]
+
+    return (uri, SpotifyTrackData(track["name"], artists, album_image))
+
+def play_song_from_uri(track_uri, track_data):
+    logger.debug(f"Playing song from uri: {track_uri}, song data: {track_data.name} {track_data.artists}")
 
     device_id = get_active_device_id()
 
     if not device_id:
-        return PlayResult.NO_SPOTIFY, None
+        return PlayResult.NO_SPOTIFY
 
     if not get_settings().get("spotify_do_not_disturb_mode"):
-        client.start_playback(device_id=device_id, uris=[uri])
+        get_spotify().start_playback(device_id=device_id, uris=[track_uri])
         set_repeat(device_id=device_id)
 
     get_settings().set("last_device", device_id)
 
-    artists = [a["name"] for a in track["artists"]]
+    return PlayResult.OK
 
-    return PlayResult.OK, SpotifyTrackData(track["name"], artists, album_image)
+def get_tracks_from_playlist_or_album(url) -> list[tuple[str, SpotifyTrackData]] | None:
+    # https://open.spotify.com/album/3qzrNVuUyOJxfzMYRCh5qN?si=-vm-Zq5vRcegs0vj-CCZXA
+    # https://open.spotify.com/playlist/0MjKHGg1tjKMsK6nY5TGad?si=5c50686e9bb34a17
+
+    client = get_spotify()
+
+    if "https://open.spotify.com/album" in url:
+        # Album
+        album = client.album(url) ### TODO: Fetch more (current max: 50) ###
+
+        assert album is not None
+
+        album_image = album["images"][0]["url"]
+
+        artists = [a["name"] for a in album["artists"]]
+
+        tracks_raw = album["tracks"]["items"]
+
+        tracks = []
+
+        for track_raw in tracks_raw:
+            tracks.append((track_raw["uri"], SpotifyTrackData(track_raw["name"], artists, album_image)))
+        
+        return tracks        
+
+    elif "https://open.spotify.com/playlist" in url:
+        # Playlist
+        playlist = client.playlist(url[:56][-22:]) ### TODO: Handle the links in a better way ###
+
+        assert playlist is not None
+
+        tracks_raw = playlist["items"]["items"]
+
+        tracks = []
+
+        for track_raw in tracks_raw:
+            track_raw = track_raw["item"]
+            tracks.append((track_raw["uri"], SpotifyTrackData(track_raw["name"], [a["name"] for a in track_raw["artists"]], track_raw["album"]["images"][0])))
+
+        return tracks 
+
+    else:
+        logger.warning(f"Specified album/playlist could not be found, url: {url}")
+        from utils.ui_utils import show_error
+        show_error("Specified album/playlist could not be found")
+        return None

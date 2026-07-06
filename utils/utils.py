@@ -1,6 +1,5 @@
 import re
 import logging
-from typing import Any
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.uix.screenmanager import ScreenManager

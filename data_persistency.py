@@ -12,6 +12,9 @@ class Settings:
         "lastfm_limit": 100,
         "lastfm_period": "overall",
         "lastfm_username": "",
+        "gamemode": "lastfm",
+        "spotify_playlist_url": "",
+        "spotify_album_url": "",
 
         "debug_mode": True, ### TODO: Change default debug_mode to False ###
         "spotify_do_not_disturb_mode": False

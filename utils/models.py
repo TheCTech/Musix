@@ -7,13 +7,6 @@ class PlayResult(Enum):
     ERROR = auto()
 
 
-class LastfmTrack:
-    def __init__(self, name, artist, playcount):
-        self.name = name
-        self.artist = artist
-        self.playcount = playcount
-
-
 class SpotifyTrackData:
     def __init__(self, name, artists, image_url):
         self.name = name

@@ -11,7 +11,7 @@ from kivy.uix.spinner import Spinner
 from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.uix.widget import Widget
-from kivy.graphics import Color, Rectangle
+from kivy.graphics import Color
 from kivy.uix.progressbar import ProgressBar
 
 import logging
@@ -114,7 +114,8 @@ class HomeScreen(Screen):
         from game_logic import play
 
         self.play_button = Button(
-            text="PLAY",
+            text="PLAY\nConnect to spotify in settings to play",
+            halign='center',
             #font_size=14,
             on_press=lambda _: Thread(target=play, daemon=True).start(),
             disabled=True
@@ -138,6 +139,7 @@ class HomeScreen(Screen):
 
         if sp is not None:
             Clock.schedule_once(lambda dt: setattr(self.play_button, "disabled", False), 0)
+            Clock.schedule_once(lambda dt: setattr(self.play_button, "text", "PLAY"), 0)
             return
         
         Clock.schedule_once(lambda dt: Thread(target=self.validate_spotify, daemon=True).start(), 1)
@@ -192,6 +194,9 @@ class SettingsScreen(Screen):
 
         self.add_group_label("General")
         self.add_slider_setting("Round length", 3, 25, 1, "round_length")
+        self.add_choice_setting("Gamemode", [("Last.fm", "lastfm"), ("Playlist", "playlist"), ("Album", "album")] ,"gamemode")
+        self.add_text_setting("Playlist mode playlist url", "spotify_playlist_url")
+        self.add_text_setting("Album mode album url", "spotify_album_url")
         self.add_toggle_setting("Input autofocus", "input_autofocus")
 
         self.add_group_label("Spotify")

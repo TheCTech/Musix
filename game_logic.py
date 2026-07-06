@@ -6,13 +6,12 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.image import AsyncImage
 from kivy.loader import Loader
 from kivy.uix.widget import Widget
-from kivy.uix.progressbar import ProgressBar
 
 import logging
 import random
 
 from services.lastfm import get_top_tracks, verify_user
-from services.spotify import play_song, PlayResult
+from services.spotify import play_song_from_uri, PlayResult, get_tracks_from_playlist_or_album
 from matching.aliases import TrackAnswerAliases
 from matching.matching import analyze_guess
 from utils.utils import get_app, get_settings
@@ -150,18 +149,23 @@ class GuessScreen(Screen):
             )
 
     def start_guessing(self):
-        self.answer_aliases = TrackAnswerAliases(self.lastfm_track, self.spotify_track)
+        self.answer_aliases = TrackAnswerAliases(self.spotify_track)
 
         self.title_guessed = False
-        self.artist_guessed = False
+        self.artist_guessed = False if get_settings().get("gamemode") != "album" else True
+
+        # Preload cover image
+        Loader.image(self.spotify_track.image_url)
 
         self.update_display()
         self.start_song_timer()
 
-        self.cover_image.source = "assets/unknown_cover.png"
+        if get_settings().get("gamemode") == "album":
+            if self.cover_image.source != self.spotify_track.image_url:
+                self.cover_image.source = self.spotify_track.image_url
+        else:
+            self.cover_image.source = "assets/unknown_cover.png"
 
-        # Preload cover image
-        Loader.image(self.spotify_track.image_url)
 
         self.input_bar.disabled = False
         if get_settings().get("input_autofocus"):
@@ -201,8 +205,8 @@ class GuessScreen(Screen):
                 Clock.schedule_once(lambda dt: setattr(self.input_bar, "focus", True), 0)
 
     def update_display(self):
-        title = self.lastfm_track.name if self.title_guessed else "XXXX"
-        artist = self.lastfm_track.artist if self.artist_guessed else "XXXX"
+        title = self.spotify_track.name if self.title_guessed else "XXXX"
+        artist = self.spotify_track.artists[0] if self.artist_guessed else "XXXX"
 
         self.label.text = f"{title} [color=888888]by[/color] {artist}"
     
@@ -217,7 +221,8 @@ class GuessScreen(Screen):
 
         self.input_bar.disabled = True
 
-        self.cover_image.source = self.spotify_track.image_url
+        if self.cover_image.source != self.spotify_track.image_url:
+            self.cover_image.source = self.spotify_track.image_url
 
         self.current_track_id += 1
         if self.current_track_id > len(self.tracks)-1:
@@ -232,34 +237,23 @@ class GuessScreen(Screen):
             f"Round {self.current_track_id + 1} / {len(self.tracks)}"
         )
         
-        track = self.tracks[self.current_track_id]
+        track_uri, track_data = self.tracks[self.current_track_id]
 
-        logger.debug(f"{track.name} ({self.current_track_id+1}/{len(self.tracks)})")
+        logger.debug(f"{track_data.name} ({self.current_track_id+1}/{len(self.tracks)})")
 
-        state, spotify_data = play_song(f"track:{track.name} artist:{track.artist}")
+        state = play_song_from_uri(track_uri, track_data)
 
         if state == PlayResult.NO_SPOTIFY:
             print("No active Spotify device found. Open Spotify app first.")
             show_error("No active Spotify device found. Open Spotify app first.")
             return
 
-        if state == PlayResult.ERROR:
-            logger.error("Round preparation cancelled, spotify error detected")
-            # The error should be handled externally
-            return
-
-        if state == PlayResult.SONG_NOT_FOUND:
-            ### TODO: When doing score logic this needs to be taken into account ###
-            print("The song could not be found, skipping")
-            show_error("The song could not be found")
-            return
-
         if state == PlayResult.OK:
             logger.debug("OK (song should be playing)")
 
-            assert spotify_data is not None
-            self.lastfm_track = track
-            self.spotify_track = spotify_data
+            assert track_data is not None
+
+            self.spotify_track = track_data
             
             self.start_guessing()
 
@@ -279,23 +273,33 @@ def play():
 
     settings = get_settings()
 
-    lastfm_username = settings.get("lastfm_username")
+    gamemode = settings.get("gamemode")
 
-    if not verify_user(lastfm_username):
-        show_error("Last.fm user not found, please specify the correct username in settings")
-        return
+    if gamemode == "lastfm":
+        # Lastfm
+        lastfm_username = settings.get("lastfm_username")
 
-    top_tracks = get_top_tracks(lastfm_username, limit=settings.get("lastfm_limit"))
+        if not verify_user(lastfm_username):
+            show_error("Last.fm user not found, please specify the correct username in settings")
+            return
 
-    if not top_tracks:
-        logger.error("No tracks found.")
-        show_error("Could not fetch any tracks")
-        return
+        tracks = get_top_tracks(lastfm_username, period=settings.get("lastfm_period"), limit=settings.get("lastfm_limit"), return_amount=get_settings().get("round_length"))
 
-    random.shuffle(top_tracks)
-    top_tracks = top_tracks[:get_settings().get("round_length")]
+        if not tracks:
+            logger.error("No tracks found.")
+            show_error("Could not fetch any tracks")
+            return
+
+    else:
+        url = settings.get("spotify_playlist_url") if gamemode == "playlist" else settings.get("spotify_album_url")
+        tracks = get_tracks_from_playlist_or_album(url)
+    
+
+    assert tracks is not None
+    random.shuffle(tracks)
+    tracks = tracks[:get_settings().get("round_length")]  
 
     Clock.schedule_once(lambda dt: (
-        setattr(sm, "current", "guess_screen"),
-        guess_screen.prepare_game(top_tracks)
-    ))
+            setattr(sm, "current", "guess_screen"),
+            guess_screen.prepare_game(tracks)
+        ))
