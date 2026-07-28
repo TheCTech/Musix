@@ -181,7 +181,7 @@ def get_tracks_from_playlist_or_album(url) -> list[tuple[str, SpotifyTrackData]]
 
         for track_raw in tracks_raw:
             track_raw = track_raw["item"]
-            tracks.append((track_raw["uri"], SpotifyTrackData(track_raw["name"], [a["name"] for a in track_raw["artists"]], track_raw["album"]["images"][0])))
+            tracks.append((track_raw["uri"], SpotifyTrackData(track_raw["name"], [a["name"] for a in track_raw["artists"]], track_raw["album"]["images"][0]["url"])))
 
         return tracks 
 

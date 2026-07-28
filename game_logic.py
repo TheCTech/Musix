@@ -155,6 +155,7 @@ class GuessScreen(Screen):
         self.artist_guessed = False if get_settings().get("gamemode") != "album" else True
 
         # Preload cover image
+        logger.debug(f"Preloading image from url: {self.spotify_track.image_url}")
         Loader.image(self.spotify_track.image_url)
 
         self.update_display()
