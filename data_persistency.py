@@ -17,7 +17,7 @@ class Settings:
         "spotify_playlist_url": "",
         "spotify_album_url": "",
 
-        "debug_mode": True, ### TODO: Change default debug_mode to False ###
+        "debug_mode": False,
         "spotify_do_not_disturb_mode": False
     }
 
