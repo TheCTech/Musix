@@ -19,7 +19,7 @@ import shutil
 from threading import Thread
 
 from services.spotify import validate_spotify_token
-from utils.utils import get_app, get_settings, handle_spotify_authentication_button
+from utils.utils import get_app, get_settings, handle_spotify_authentication_button, get_storage_path
 
 logger = logging.getLogger(__name__)
 
@@ -211,7 +211,7 @@ class SettingsScreen(Screen):
             self.add_group_label("Debug")
             self.add_button("Disable debug mode", "Disable", lambda _: (get_settings().set("debug_mode", False), show_error("Debug mode disabled, please restart the app", fatal_error=True)))
             self.add_toggle_setting("Spotify DND mode", "spotify_do_not_disturb_mode")
-            self.add_button("Clear cache", "Clear", lambda _: (shutil.rmtree("cache"), show_error("The app needs to restart after cache removal", fatal_error=True)))
+            self.add_button("Clear cache", "Clear", lambda _: (shutil.rmtree(f"{get_storage_path}/cache"), show_error("The app needs to restart after cache removal", fatal_error=True)))
 
         #endregion
 

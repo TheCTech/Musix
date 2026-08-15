@@ -1,6 +1,5 @@
 .cache
 .env
-settings.json
 
 secrets.py
 

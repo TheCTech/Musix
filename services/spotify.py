@@ -4,7 +4,7 @@ from spotipy.oauth2 import SpotifyOAuth
 import logging
 
 from utils.models import PlayResult, SpotifyTrackData
-from utils.utils import get_settings
+from utils.utils import get_settings, get_storage_path
 from secrets import SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI
 
 logger = logging.getLogger(__name__)
@@ -13,12 +13,15 @@ scope = "user-modify-playback-state user-read-playback-state"
 
 sp = None
 
+def get_token_path():
+    return f"{get_storage_path()}/cache/spotify_token.json"
+
 def validate_spotify_token():
-    cache_handler = spotipy.CacheFileHandler("cache/spotify_token.json")
+    cache_handler = spotipy.CacheFileHandler(get_token_path())
 
     auth_manager = SpotifyOAuth(
             scope=scope,
-            cache_path="cache/spotify_token.json",
+            cache_path=get_token_path(),
             client_id=SPOTIFY_CLIENT_ID,
             client_secret=SPOTIFY_CLIENT_SECRET,
             redirect_uri=SPOTIFY_REDIRECT_URI
@@ -31,7 +34,7 @@ def validate_spotify_token():
 def authenticate_spotify():
     auth_manager = SpotifyOAuth(
             scope=scope,
-            cache_path="cache/spotify_token.json",
+            cache_path=get_token_path(),
             client_id=SPOTIFY_CLIENT_ID,
             client_secret=SPOTIFY_CLIENT_SECRET,
             redirect_uri=SPOTIFY_REDIRECT_URI
@@ -59,7 +62,7 @@ def get_spotify():
     if sp is None:
         auth_manager = SpotifyOAuth(
             scope=scope,
-            cache_path="cache/spotify_token.json",
+            cache_path=get_token_path(),
             client_id=SPOTIFY_CLIENT_ID,
             client_secret=SPOTIFY_CLIENT_SECRET,
             redirect_uri=SPOTIFY_REDIRECT_URI

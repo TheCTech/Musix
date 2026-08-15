@@ -9,6 +9,7 @@ from threading import Thread
 logger = logging.getLogger(__name__)
 
 app: App | None = None
+storage_dir = None
 
 def get_app() -> App:
     global app
@@ -19,6 +20,13 @@ def get_app() -> App:
 
 def get_settings():
     return get_app().settings_obj
+
+def get_storage_path():
+    global storage_dir
+    if storage_dir is None:
+        storage_dir = get_app().user_data_dir
+
+    return storage_dir
 
 def normalize(text: str) -> str:
     text = text.lower().strip()
@@ -42,7 +50,8 @@ def handle_spotify_authentication_button(is_spotify, button_instance): # False f
         else:
             logger.debug("Removing spotify token from cache")
             from os import remove
-            remove("cache/spotify_token.json")
+            from services.spotify import token_path
+            remove(token_path)
 
             app.home_screen.play_button.disabled = True
             app.home_screen.validate_spotify()
